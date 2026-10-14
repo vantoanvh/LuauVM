@@ -4,8 +4,8 @@ The main goal is speed, so it doesn't include debugging hooks or tracing. It's m
 Also tries to match stock Luau's behavior as closely as possible<br>
 
 You can choose 2 type of file:
-- LuauVM.luau: `~4,800` lines of code
-- BakedVM.luau: `~400,000` lines of code, fastest execution speed possible, slower decode time
+- LuauVM.luau: Default one, `~4,800` lines of code
+- BakedVM.luau: A prebaked version, `~400,000` lines of code, fastest execution speed possible, slower decode time
 
 ## Performance
 
