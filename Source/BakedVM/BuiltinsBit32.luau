@@ -1093,6 +1093,11 @@ const function MakeFastBit32Byteswap1x1(Mode: number, A: number, OnNext: Handler
 end
 
 const function Matches(Id: number, Value: any, Count: number, Results: number): boolean
+	--// a builtin missing from the host (the integer library on Roblox) proves nothing
+	if Value == nil then
+		return false
+	end
+
 	if Id == 28 then
 		return (Value == Bit32Arshift) and (Count == 2) and Results <= 1
 	end

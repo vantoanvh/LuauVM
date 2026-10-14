@@ -61,7 +61,7 @@ const Bit32BTest = bit32.btest
 const Bit32RShift = bit32.rshift
 const Bit32LShift = bit32.lshift
 const Bit32Extract = bit32.extract
-const IntegerFromString = integer.fromstring
+const IntegerFromString = integer and integer.fromstring or nil
 const MathMax = math.max
 
 const EmptyVarargs = Runtime.EmptyVarargs
@@ -8563,7 +8563,13 @@ const function Deserialize(Bytecode: string | buffer, Config: Settings): ({ Raw 
 				const High, Low = ReadVarInt64()
 				const Digits = StringFormat("%08x%08x", High, Low)
 
-				Constant = IntegerFromString(if Negative then `-{Digits}` else Digits, 16)
+				const FromString = IntegerFromString
+
+				if FromString == nil then
+					Error("64-bit integer constants need the integer library, which this environment does not have", 0)
+				else
+					Constant = FromString(if Negative then `-{Digits}` else Digits, 16)
+				end
 			elseif Kind == 10 then --// Class shape
 				ReadVarInt()
 

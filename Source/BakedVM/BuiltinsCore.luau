@@ -1143,6 +1143,11 @@ const function MakeFastTostring1x1(Mode: number, A: number, OnNext: Handler, OnT
 end
 
 const function Matches(Id: number, Value: any, Count: number, Results: number): boolean
+	--// a builtin missing from the host (the integer library on Roblox) proves nothing
+	if Value == nil then
+		return false
+	end
+
 	if Id == 1 then
 		return (Value == Assert) and (Count == 1 or Count == 2) and Results <= 1
 	end

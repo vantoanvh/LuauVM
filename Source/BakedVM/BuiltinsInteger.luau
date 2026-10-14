@@ -17,43 +17,43 @@ const Runtime = require("./Runtime")
 
 --// Environment changes in the VM are not supposed to alter the behaviour of the VM so we localise globals beforehand
 
-const IntegerCreate = integer.create
-const IntegerTonumber = integer.tonumber
-const IntegerNeg = integer.neg
-const IntegerAdd = integer.add
-const IntegerSub = integer.sub
-const IntegerMul = integer.mul
-const IntegerDiv = integer.div
-const IntegerMin = integer.min
-const IntegerMax = integer.max
-const IntegerRem = integer.rem
-const IntegerIdiv = integer.idiv
-const IntegerUdiv = integer.udiv
-const IntegerUrem = integer.urem
-const IntegerMod = integer.mod
-const IntegerClamp = integer.clamp
-const IntegerBand = integer.band
-const IntegerBor = integer.bor
-const IntegerBnot = integer.bnot
-const IntegerBxor = integer.bxor
-const IntegerLt = integer.lt
-const IntegerLe = integer.le
-const IntegerUlt = integer.ult
-const IntegerUle = integer.ule
-const IntegerGt = integer.gt
-const IntegerGe = integer.ge
-const IntegerUgt = integer.ugt
-const IntegerUge = integer.uge
-const IntegerLshift = integer.lshift
-const IntegerRshift = integer.rshift
-const IntegerArshift = integer.arshift
-const IntegerLrotate = integer.lrotate
-const IntegerRrotate = integer.rrotate
-const IntegerExtract = integer.extract
-const IntegerBtest = integer.btest
-const IntegerCountrz = integer.countrz
-const IntegerCountlz = integer.countlz
-const IntegerBswap = integer.bswap
+const IntegerCreate = (integer and integer.create or nil) :: typeof(integer.create)
+const IntegerTonumber = (integer and integer.tonumber or nil) :: typeof(integer.tonumber)
+const IntegerNeg = (integer and integer.neg or nil) :: typeof(integer.neg)
+const IntegerAdd = (integer and integer.add or nil) :: typeof(integer.add)
+const IntegerSub = (integer and integer.sub or nil) :: typeof(integer.sub)
+const IntegerMul = (integer and integer.mul or nil) :: typeof(integer.mul)
+const IntegerDiv = (integer and integer.div or nil) :: typeof(integer.div)
+const IntegerMin = (integer and integer.min or nil) :: typeof(integer.min)
+const IntegerMax = (integer and integer.max or nil) :: typeof(integer.max)
+const IntegerRem = (integer and integer.rem or nil) :: typeof(integer.rem)
+const IntegerIdiv = (integer and integer.idiv or nil) :: typeof(integer.idiv)
+const IntegerUdiv = (integer and integer.udiv or nil) :: typeof(integer.udiv)
+const IntegerUrem = (integer and integer.urem or nil) :: typeof(integer.urem)
+const IntegerMod = (integer and integer.mod or nil) :: typeof(integer.mod)
+const IntegerClamp = (integer and integer.clamp or nil) :: typeof(integer.clamp)
+const IntegerBand = (integer and integer.band or nil) :: typeof(integer.band)
+const IntegerBor = (integer and integer.bor or nil) :: typeof(integer.bor)
+const IntegerBnot = (integer and integer.bnot or nil) :: typeof(integer.bnot)
+const IntegerBxor = (integer and integer.bxor or nil) :: typeof(integer.bxor)
+const IntegerLt = (integer and integer.lt or nil) :: typeof(integer.lt)
+const IntegerLe = (integer and integer.le or nil) :: typeof(integer.le)
+const IntegerUlt = (integer and integer.ult or nil) :: typeof(integer.ult)
+const IntegerUle = (integer and integer.ule or nil) :: typeof(integer.ule)
+const IntegerGt = (integer and integer.gt or nil) :: typeof(integer.gt)
+const IntegerGe = (integer and integer.ge or nil) :: typeof(integer.ge)
+const IntegerUgt = (integer and integer.ugt or nil) :: typeof(integer.ugt)
+const IntegerUge = (integer and integer.uge or nil) :: typeof(integer.uge)
+const IntegerLshift = (integer and integer.lshift or nil) :: typeof(integer.lshift)
+const IntegerRshift = (integer and integer.rshift or nil) :: typeof(integer.rshift)
+const IntegerArshift = (integer and integer.arshift or nil) :: typeof(integer.arshift)
+const IntegerLrotate = (integer and integer.lrotate or nil) :: typeof(integer.lrotate)
+const IntegerRrotate = (integer and integer.rrotate or nil) :: typeof(integer.rrotate)
+const IntegerExtract = (integer and integer.extract or nil) :: typeof(integer.extract)
+const IntegerBtest = (integer and integer.btest or nil) :: typeof(integer.btest)
+const IntegerCountrz = (integer and integer.countrz or nil) :: typeof(integer.countrz)
+const IntegerCountlz = (integer and integer.countlz or nil) :: typeof(integer.countlz)
+const IntegerBswap = (integer and integer.bswap or nil) :: typeof(integer.bswap)
 
 const RegisterBase = Runtime.RegisterBase
 const Unlinked = Runtime.Unlinked
@@ -2215,6 +2215,11 @@ const function MakeFastIntegerBswap1x1(Mode: number, A: number, OnNext: Handler,
 end
 
 const function Matches(Id: number, Value: any, Count: number, Results: number): boolean
+	--// a builtin missing from the host (the integer library on Roblox) proves nothing
+	if Value == nil then
+		return false
+	end
+
 	if Id == 94 then
 		return (Value == IntegerCreate) and (Count == 1) and Results <= 1
 	end

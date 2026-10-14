@@ -239,6 +239,12 @@ table.sort(Builtins, function(Left: Builtin, Right: Builtin): boolean
 end)
 
 -- The local alias generated code uses for a library expression: math.floor -> MathFloor, rawget -> Rawget.
+-- The value a builtin alias is declared with: the integer library is missing on Roblox, so its members alias to nil there
+-- instead of failing when the module loads. They keep their function type, since Matches never proves a call to a nil builtin.
+const function AliasValue(Expression: string): string
+	return if string.sub(Expression, 1, 8) == "integer." then `(integer and {Expression} or nil) :: typeof({Expression})` else Expression
+end
+
 const function AliasOf(Expression: string): string
 	const Parts: { string } = {}
 
@@ -285,7 +291,7 @@ const GlobalAliases: { { string } } = {
 	{ "Bit32RShift", "bit32.rshift" },
 	{ "Bit32LShift", "bit32.lshift" },
 	{ "Bit32Extract", "bit32.extract" },
-	{ "IntegerFromString", "integer.fromstring" },
+	{ "IntegerFromString", "integer and integer.fromstring or nil" },
 	{ "MathMax", "math.max" },
 	{ "MathSqrt", "math.sqrt" },
 }
@@ -2113,6 +2119,11 @@ end
 -- handler for a proven builtin call by argument and result count.
 const function EmitBuiltinDispatch(ModuleName: string)
 	Push("const function Matches(Id: number, Value: any, Count: number, Results: number): boolean")
+	Push("\t--// a builtin missing from the host (the integer library on Roblox) proves nothing")
+	Push("\tif Value == nil then")
+	Push("\t\treturn false")
+	Push("\tend")
+	Push("")
 
 	for _, Hinted in Builtins do
 		if Hinted.Module == ModuleName then
@@ -2637,7 +2648,13 @@ const function Deserialize(Bytecode: string | buffer, Config: Settings): ({ Raw 
 				const High, Low = ReadVarInt64()
 				const Digits = StringFormat("%08x%08x", High, Low)
 
-				Constant = IntegerFromString(if Negative then `-{Digits}` else Digits, 16)
+				const FromString = IntegerFromString
+
+				if FromString == nil then
+					Error("64-bit integer constants need the integer library, which this environment does not have", 0)
+				else
+					Constant = FromString(if Negative then `-{Digits}` else Digits, 16)
+				end
 			elseif Kind == 10 then --// Class shape
 				ReadVarInt()
 
@@ -3427,7 +3444,7 @@ const function WriteModule(Name: string, Documentation: string, Requires: { stri
 
 	for _, Alias in GlobalAliases do
 		if Uses(Body, Alias[1]) then
-			table.insert(Aliases, `const {Alias[1]} = {Alias[2]}`)
+			table.insert(Aliases, `const {Alias[1]} = {AliasValue(Alias[2])}`)
 		end
 	end
 
