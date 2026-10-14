@@ -8714,19 +8714,19 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 		Primary[Index] = Index + 1
 		Secondary[Index] = 0
 
-		if PureJumps[Opcode] or Opcode == 59 or Opcode == 61 or Opcode == 76 then --[[ jumps and FORGPREP* ]]
+		if PureJumps[Opcode] or Opcode == 59 or Opcode == 61 or Opcode == 76 then -- jumps and FORGPREP*
 			Primary[Index] = Jump
 		elseif Branches[Opcode] then
 			Secondary[Index] = Jump
-		elseif Opcode == 3 and Bit32RShift(Value, 24) ~= 0 then --[[ LOADB with skip ]]
+		elseif Opcode == 3 and Bit32RShift(Value, 24) ~= 0 then -- LOADB with skip
 			Primary[Index] = Ordinal[Start + 1 + Bit32RShift(Value, 24)]
-		elseif Opcode == 22 then --[[ RETURN ]]
+		elseif Opcode == 22 then -- RETURN
 			const Count = Bit32BAnd(Operand, 0xFF) - 1
 			const Kind = if Count >= 0 and Count <= 2 then Count else 3
 
 			Primary[Index] = 0
 			Shape = if Shape == -1 or Shape == Kind then Kind else 3
-		elseif Opcode == 19 then --[[ NEWCLOSURE ]]
+		elseif Opcode == 19 then -- NEWCLOSURE
 			for Position = 1, RawList[Raw.Protos[SignedD + 1]].UpvalueCount do
 				if Bit32BAnd(Bit32RShift(Words[Start + Position], 8), 0xFF) == 1 then
 					Open = true
@@ -8734,7 +8734,7 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			end
 		end
 
-		if Opcode == 67 then --[[ JUMPX ]]
+		if Opcode == 67 then -- JUMPX
 			const Offset = Bit32RShift(Value, 8)
 
 			Primary[Index] = Ordinal[Start + 1 + (if Offset >= 0x800000 then Offset - 0x1000000 else Offset)]
@@ -8836,7 +8836,7 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 		const Room = Depth[Index] < ChainLimit
 		local Mode = 0
 
-		if Opcodes[Index] == 76 then --[[ FORGPREP: its FORGLOOP comes later, so it is marked before any edge into it is linked ]]
+		if Opcodes[Index] == 76 then -- FORGPREP: its FORGLOOP comes later, so it is marked before any edge into it is linked
 			Bounce[First] = true
 		end
 
@@ -8902,10 +8902,10 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 		const Start = Starts[Index]
 		const A = Bit32BAnd(Bit32RShift(Words[Start], 8), 0xFF)
 
-		if Opcodes[Index] == 56 then --[[ FORNPREP ]]
+		if Opcodes[Index] == 56 then -- FORNPREP
 			LoopStepOne[A] = LoadedNumber(Start - 1, A + 1) == 1
 			LoopLimit[A] = LoadedNumber(Start - 2, A)
-		elseif Opcodes[Index] == 57 then --[[ FORNLOOP ]]
+		elseif Opcodes[Index] == 57 then -- FORNLOOP
 			StepOneAt[Index] = LoopStepOne[A] == true
 			LimitAt[Index] = LoopLimit[A]
 		end
@@ -8934,35 +8934,35 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 		local Made: Handler
 		local Link: Linker
 
-		if Opcode == 2 then --[[ LOADNIL ]]
+		if Opcode == 2 then -- LOADNIL
 			Made, Link = Values.MakeLoadNil(Mode, A, OnNext, OnTarget)
-		elseif Opcode == 3 then --[[ LOADB ]]
+		elseif Opcode == 3 then -- LOADB
 			if C == 0 then
 				Made, Link = Values.MakeLoadK(Mode, A, B == 1, OnNext, OnTarget)
 			else
 				Made, Link = Values.MakeLoadSkip(Mode, A, B == 1, OnNext, OnTarget)
 			end
-		elseif Opcode == 4 then --[[ LOADN ]]
+		elseif Opcode == 4 then -- LOADN
 			Made, Link = Values.MakeLoadK(Mode, A, SignedD, OnNext, OnTarget)
-		elseif Opcode == 5 then --[[ LOADK ]]
+		elseif Opcode == 5 then -- LOADK
 			Made, Link = Values.MakeLoadK(Mode, A, Constants[SignedD + 1], OnNext, OnTarget)
-		elseif Opcode == 6 then --[[ MOVE ]]
+		elseif Opcode == 6 then -- MOVE
 			Made, Link = Values.MakeMove(Mode, A, B, OnNext, OnTarget)
-		elseif Opcode == 7 then --[[ GETGLOBAL ]]
+		elseif Opcode == 7 then -- GETGLOBAL
 			Made, Link = Values.MakeGetGlobal(Mode, A, Constants[Aux + 1], Env, OnNext, OnTarget)
-		elseif Opcode == 8 then --[[ SETGLOBAL ]]
+		elseif Opcode == 8 then -- SETGLOBAL
 			Made, Link = Values.MakeSetGlobal(Mode, A, Constants[Aux + 1], Env, OnNext, OnTarget)
-		elseif Opcode == 9 then --[[ GETUPVAL ]]
+		elseif Opcode == 9 then -- GETUPVAL
 			if Proto.Cells[B + 1] then
 				Made, Link = Values.MakeGetUpval(Mode, A, B, OnNext, OnTarget)
 			else
 				Made, Link = Values.MakeGetUpvalValue(Mode, A, B, OnNext, OnTarget)
 			end
-		elseif Opcode == 10 then --[[ SETUPVAL ]]
+		elseif Opcode == 10 then -- SETUPVAL
 			Made, Link = Values.MakeSetUpval(Mode, A, B, OnNext, OnTarget)
-		elseif Opcode == 11 then --[[ CLOSEUPVALS ]]
+		elseif Opcode == 11 then -- CLOSEUPVALS
 			Made, Link = Values.MakeCloseUpvals(Mode, A, OnNext, OnTarget)
-		elseif Opcode == 12 then --[[ GETIMPORT ]]
+		elseif Opcode == 12 then -- GETIMPORT
 			const Count = Bit32RShift(Aux, 30)
 			const K0 = Constants[Bit32BAnd(Bit32RShift(Aux, 20), 0x3FF) + 1]
 			const K1 = Constants[Bit32BAnd(Bit32RShift(Aux, 10), 0x3FF) + 1]
@@ -8974,19 +8974,19 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Values.MakeGetImportSlow(Mode, A, { Count, K0, K1, K2 }, Env, OnNext, OnTarget)
 			end
-		elseif Opcode == 13 then --[[ GETTABLE ]]
+		elseif Opcode == 13 then -- GETTABLE
 			Made, Link = Tables.MakeGetTable(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 14 then --[[ SETTABLE ]]
+		elseif Opcode == 14 then -- SETTABLE
 			Made, Link = Tables.MakeSetTable(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 15 or Opcode == 83 then --[[ GETTABLEKS / GETUDATAKS ]]
+		elseif Opcode == 15 or Opcode == 83 then -- GETTABLEKS / GETUDATAKS
 			Made, Link = Tables.MakeGetTableKS(Mode, A, B, Constants[(if Opcode == 83 then Bit32BAnd(Aux, 0xFFFF) else Aux) + 1], OnNext, OnTarget)
-		elseif Opcode == 16 or Opcode == 84 then --[[ SETTABLEKS / SETUDATAKS ]]
+		elseif Opcode == 16 or Opcode == 84 then -- SETTABLEKS / SETUDATAKS
 			Made, Link = Tables.MakeSetTableKS(Mode, A, B, Constants[(if Opcode == 84 then Bit32BAnd(Aux, 0xFFFF) else Aux) + 1], OnNext, OnTarget)
-		elseif Opcode == 17 then --[[ GETTABLEN ]]
+		elseif Opcode == 17 then -- GETTABLEN
 			Made, Link = Tables.MakeGetTableN(Mode, A, B, C + 1, OnNext, OnTarget)
-		elseif Opcode == 18 then --[[ SETTABLEN ]]
+		elseif Opcode == 18 then -- SETTABLEN
 			Made, Link = Tables.MakeSetTableN(Mode, A, B, C + 1, OnNext, OnTarget)
-		elseif Opcode == 19 then --[[ NEWCLOSURE ]]
+		elseif Opcode == 19 then -- NEWCLOSURE
 			const Description = Describe(Start, Raw.Protos[SignedD + 1])
 			const Child: Proto = Description[1]
 
@@ -9001,7 +9001,7 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Frames.MakeNewClosure(Mode, A, Description, OnNext, OnTarget)
 			end
-		elseif Opcode == 20 or Opcode == 85 then --[[ NAMECALL / NAMECALLUDATA ]]
+		elseif Opcode == 20 or Opcode == 85 then -- NAMECALL / NAMECALLUDATA
 			const Method = Constants[(if Opcode == 85 then Bit32BAnd(Aux, 0xFFFF) else Aux) + 1]
 			const Call = Fused[Index]
 
@@ -9010,7 +9010,7 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Tables.MakeNameCall(Mode, A, B, Method, OnNext, OnTarget)
 			end
-		elseif Opcode == 21 or Opcode == 87 then --[[ CALL / CALLFB ]]
+		elseif Opcode == 21 or Opcode == 87 then -- CALL / CALLFB
 			const Builtin = Proven[Index]
 			local Fast: Handler?, FastLink: Linker? = nil, nil
 
@@ -9023,7 +9023,7 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = MakeCall(Mode, A, B, C, OnNext, OnTarget)
 			end
-		elseif Opcode == 22 then --[[ RETURN ]]
+		elseif Opcode == 22 then -- RETURN
 			if Shape == 0 then
 				Made, Link = Frames.MakeReturnNone(Mode)
 			elseif Shape == 1 then
@@ -9039,57 +9039,57 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Frames.MakeReturnRange(Mode, A, B)
 			end
-		elseif PureJumps[Opcode] then --[[ JUMP / JUMPBACK / JUMPX / CMPPROTO ]]
+		elseif PureJumps[Opcode] then -- JUMP / JUMPBACK / JUMPX / CMPPROTO
 			Made, Link = Control.MakeJump(Mode, OnNext, OnTarget)
-		elseif Opcode == 25 then --[[ JUMPIF ]]
+		elseif Opcode == 25 then -- JUMPIF
 			Made, Link = Control.MakeJumpIf(Mode, A, OnNext, OnTarget)
-		elseif Opcode == 26 then --[[ JUMPIFNOT ]]
+		elseif Opcode == 26 then -- JUMPIFNOT
 			Made, Link = Control.MakeJumpIfNot(Mode, A, OnNext, OnTarget)
-		elseif Opcode == 27 then --[[ JUMPIFEQ ]]
+		elseif Opcode == 27 then -- JUMPIFEQ
 			Made, Link = Control.MakeJumpIfEq(Mode, A, Aux, OnNext, OnTarget)
-		elseif Opcode == 28 then --[[ JUMPIFLE ]]
+		elseif Opcode == 28 then -- JUMPIFLE
 			Made, Link = Control.MakeJumpIfLe(Mode, A, Aux, OnNext, OnTarget)
-		elseif Opcode == 29 then --[[ JUMPIFLT ]]
+		elseif Opcode == 29 then -- JUMPIFLT
 			Made, Link = Control.MakeJumpIfLt(Mode, A, Aux, OnNext, OnTarget)
-		elseif Opcode == 30 then --[[ JUMPIFNOTEQ ]]
+		elseif Opcode == 30 then -- JUMPIFNOTEQ
 			Made, Link = Control.MakeJumpIfNotEq(Mode, A, Aux, OnNext, OnTarget)
-		elseif Opcode == 31 then --[[ JUMPIFNOTLE ]]
+		elseif Opcode == 31 then -- JUMPIFNOTLE
 			Made, Link = Control.MakeJumpIfNotLe(Mode, A, Aux, OnNext, OnTarget)
-		elseif Opcode == 32 then --[[ JUMPIFNOTLT ]]
+		elseif Opcode == 32 then -- JUMPIFNOTLT
 			Made, Link = Control.MakeJumpIfNotLt(Mode, A, Aux, OnNext, OnTarget)
-		elseif Opcode == 33 then --[[ ADD ]]
+		elseif Opcode == 33 then -- ADD
 			Made, Link = Arithmetic.MakeAdd(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 34 then --[[ SUB ]]
+		elseif Opcode == 34 then -- SUB
 			Made, Link = Arithmetic.MakeSub(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 35 then --[[ MUL ]]
+		elseif Opcode == 35 then -- MUL
 			Made, Link = Arithmetic.MakeMul(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 36 then --[[ DIV ]]
+		elseif Opcode == 36 then -- DIV
 			Made, Link = Arithmetic.MakeDiv(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 37 then --[[ MOD ]]
+		elseif Opcode == 37 then -- MOD
 			Made, Link = Arithmetic.MakeMod(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 38 then --[[ POW ]]
+		elseif Opcode == 38 then -- POW
 			Made, Link = Arithmetic.MakePow(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 39 then --[[ ADDK ]]
+		elseif Opcode == 39 then -- ADDK
 			Made, Link = Arithmetic.MakeAddK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 40 then --[[ SUBK ]]
+		elseif Opcode == 40 then -- SUBK
 			Made, Link = Arithmetic.MakeSubK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 41 then --[[ MULK ]]
+		elseif Opcode == 41 then -- MULK
 			Made, Link = Arithmetic.MakeMulK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 42 then --[[ DIVK ]]
+		elseif Opcode == 42 then -- DIVK
 			Made, Link = Arithmetic.MakeDivK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 43 then --[[ MODK ]]
+		elseif Opcode == 43 then -- MODK
 			Made, Link = Arithmetic.MakeModK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 44 then --[[ POWK ]]
+		elseif Opcode == 44 then -- POWK
 			Made, Link = Arithmetic.MakePowK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 45 then --[[ AND ]]
+		elseif Opcode == 45 then -- AND
 			Made, Link = Arithmetic.MakeAnd(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 46 then --[[ OR ]]
+		elseif Opcode == 46 then -- OR
 			Made, Link = Arithmetic.MakeOr(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 47 then --[[ ANDK ]]
+		elseif Opcode == 47 then -- ANDK
 			Made, Link = Arithmetic.MakeAndK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 48 then --[[ ORK ]]
+		elseif Opcode == 48 then -- ORK
 			Made, Link = Arithmetic.MakeOrK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 49 then --[[ CONCAT ]]
+		elseif Opcode == 49 then -- CONCAT
 			if C - B == 1 then
 				Made, Link = Values.MakeConcat2(Mode, A, B, OnNext, OnTarget)
 			elseif C - B == 2 then
@@ -9097,19 +9097,19 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Values.MakeConcatN(Mode, A, B, C, OnNext, OnTarget)
 			end
-		elseif Opcode == 50 then --[[ NOT ]]
+		elseif Opcode == 50 then -- NOT
 			Made, Link = Arithmetic.MakeNot(Mode, A, B, OnNext, OnTarget)
-		elseif Opcode == 51 then --[[ MINUS ]]
+		elseif Opcode == 51 then -- MINUS
 			Made, Link = Arithmetic.MakeMinus(Mode, A, B, OnNext, OnTarget)
-		elseif Opcode == 52 then --[[ LENGTH ]]
+		elseif Opcode == 52 then -- LENGTH
 			Made, Link = Tables.MakeLength(Mode, A, B, OnNext, OnTarget)
-		elseif Opcode == 53 then --[[ NEWTABLE ]]
+		elseif Opcode == 53 then -- NEWTABLE
 			if Aux == 0 then
 				Made, Link = Tables.MakeNewTableEmpty(Mode, A, OnNext, OnTarget)
 			else
 				Made, Link = Tables.MakeNewTable(Mode, A, Aux, OnNext, OnTarget)
 			end
-		elseif Opcode == 54 then --[[ DUPTABLE ]]
+		elseif Opcode == 54 then -- DUPTABLE
 			const Template: Store = {}
 			local Filled = false
 
@@ -9131,11 +9131,11 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Tables.MakeNewTableEmpty(Mode, A, OnNext, OnTarget)
 			end
-		elseif Opcode == 55 then --[[ SETLIST ]]
+		elseif Opcode == 55 then -- SETLIST
 			Made, Link = Tables.MakeSetList(Mode, A, B, C, Aux, OnNext, OnTarget)
-		elseif Opcode == 56 then --[[ FORNPREP ]]
+		elseif Opcode == 56 then -- FORNPREP
 			Made, Link = Control.MakeForNPrep(Mode, A, OnNext, OnTarget)
-		elseif Opcode == 57 then --[[ FORNLOOP ]]
+		elseif Opcode == 57 then -- FORNLOOP
 			const Limit = LimitAt[Index]
 
 			if StepOneAt[Index] and Limit ~= nil then
@@ -9145,7 +9145,7 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Control.MakeForNLoop(Mode, A, OnNext, OnTarget)
 			end
-		elseif Opcode == 58 then --[[ FORGLOOP ]]
+		elseif Opcode == 58 then -- FORGLOOP
 			const Count = Bit32BAnd(Aux, 0xFF)
 
 			if Count == 1 then
@@ -9157,11 +9157,11 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Control.MakeForGLoopN(Mode, A, Count, OnNext, OnTarget)
 			end
-		elseif Opcode == 59 then --[[ FORGPREP_INEXT ]]
+		elseif Opcode == 59 then -- FORGPREP_INEXT
 			Made, Link = Control.MakeForGPrepInext(Mode, A, OnNext, OnTarget)
-		elseif Opcode == 61 then --[[ FORGPREP_NEXT ]]
+		elseif Opcode == 61 then -- FORGPREP_NEXT
 			Made, Link = Control.MakeForGPrep(Mode, A, true, OnNext, OnTarget)
-		elseif Opcode == 63 then --[[ GETVARARGS ]]
+		elseif Opcode == 63 then -- GETVARARGS
 			if B == 0 then
 				Made, Link = Values.MakeGetVarargsMulti(Mode, A, OnNext, OnTarget)
 			elseif B == 2 then
@@ -9171,23 +9171,23 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Values.MakeGetVarargsN(Mode, A, B - 1, OnNext, OnTarget)
 			end
-		elseif Opcode == 64 then --[[ DUPCLOSURE ]]
+		elseif Opcode == 64 then -- DUPCLOSURE
 			Made, Link = Frames.MakeDupClosure(Mode, A, Describe(Start, Constants[SignedD + 1] + 1), OnNext, OnTarget)
-		elseif Opcode == 66 then --[[ LOADKX ]]
+		elseif Opcode == 66 then -- LOADKX
 			Made, Link = Values.MakeLoadK(Mode, A, Constants[Aux + 1], OnNext, OnTarget)
-		elseif Opcode == 71 then --[[ SUBRK ]]
+		elseif Opcode == 71 then -- SUBRK
 			Made, Link = Arithmetic.MakeSubRK(Mode, A, C, Constants[B + 1], OnNext, OnTarget)
-		elseif Opcode == 72 then --[[ DIVRK ]]
+		elseif Opcode == 72 then -- DIVRK
 			Made, Link = Arithmetic.MakeDivRK(Mode, A, C, Constants[B + 1], OnNext, OnTarget)
-		elseif Opcode == 76 then --[[ FORGPREP ]]
+		elseif Opcode == 76 then -- FORGPREP
 			Made, Link = Control.MakeForGPrep(Mode, A, false, OnNext, OnTarget)
-		elseif Opcode == 77 then --[[ JUMPXEQKNIL ]]
+		elseif Opcode == 77 then -- JUMPXEQKNIL
 			if Bit32Extract(Aux, 31, 1) == 1 then
 				Made, Link = Control.MakeJumpIfNotNil(Mode, A, OnNext, OnTarget)
 			else
 				Made, Link = Control.MakeJumpIfNil(Mode, A, OnNext, OnTarget)
 			end
-		elseif Opcode == 78 or Opcode == 79 or Opcode == 80 then --[[ JUMPXEQKB / JUMPXEQKN / JUMPXEQKS ]]
+		elseif Opcode == 78 or Opcode == 79 or Opcode == 80 then -- JUMPXEQKB / JUMPXEQKN / JUMPXEQKS
 			const K = if Opcode == 78 then Bit32BAnd(Aux, 1) == 1 else Constants[Bit32Extract(Aux, 0, 24) + 1]
 
 			if Bit32Extract(Aux, 31, 1) == 1 then
@@ -9195,11 +9195,11 @@ const function Decode(Raw: Raw, Proto: Proto, RawList: { Raw }, ProtoList: { Pro
 			else
 				Made, Link = Control.MakeJumpIfK(Mode, A, K, OnNext, OnTarget)
 			end
-		elseif Opcode == 81 then --[[ IDIV ]]
+		elseif Opcode == 81 then -- IDIV
 			Made, Link = Arithmetic.MakeIDiv(Mode, A, B, C, OnNext, OnTarget)
-		elseif Opcode == 82 then --[[ IDIVK ]]
+		elseif Opcode == 82 then -- IDIVK
 			Made, Link = Arithmetic.MakeIDivK(Mode, A, B, Constants[C + 1], OnNext, OnTarget)
-		elseif Opcode == 86 then --[[ NEWCLASSMEMBER ]]
+		elseif Opcode == 86 then -- NEWCLASSMEMBER
 			Made, Link = Tables.MakeNewClassMember(Mode, A, C, Constants[Aux + 1], OnNext, OnTarget)
 		else
 			Made, Link = Frames.MakeUnsupported(Mode, Opcode)
@@ -9247,11 +9247,11 @@ const function ResolveCells(RawList: { Raw }, ProtoList: { Proto }, Index: numbe
 		const Opcode = Bit32BAnd(Words[Word], 0xFF)
 		local Child = 0
 
-		if Opcode == 19 then --[[ NEWCLOSURE ]]
+		if Opcode == 19 then -- NEWCLOSURE
 			const Operand = Bit32RShift(Words[Word], 16)
 
 			Child = Raw.Protos[(if Operand < 0x8000 then Operand else Operand - 0x10000) + 1]
-		elseif Opcode == 64 then --[[ DUPCLOSURE ]]
+		elseif Opcode == 64 then -- DUPCLOSURE
 			const Operand = Bit32RShift(Words[Word], 16)
 
 			Child = (Raw.Constants[(if Operand < 0x8000 then Operand else Operand - 0x10000) + 1]) + 1
