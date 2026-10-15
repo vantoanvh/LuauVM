@@ -1,16 +1,15 @@
-# LuauVM
-Very fast luau bytecode interpreter in luau<br>
-The main goal is speed, so it doesn't include debugging hooks or tracing. It's meant for running bytecode, not debugging it<br>
-Also tries to match stock Luau's behavior as closely as possible<br>
+# **LuauVM**
 
-You can choose 2 type of file:
-- `LuauVM.luau`: Default one, `~4,800` lines of code
-- `BakedVM.luau`: A prebaked version, `~400,000` lines of code, fastest execution speed possible, slower decode time
+An insanely **fast** luau bytecode interpreter in luau.<br>
+It uses direct-threaded closure interpreter instead of switch dispatch (if/elseif)
 
-## Performance
+The main goal is **speed**, so it doesn't include hooks, extensions or tracing like **[Fiu](https://github.com/rce-incorporated/Fiu)**
 
-Compared against stock Luau and Fiu across 211 workloads. (Stock Luau is the 1x baseline.) <br>
-**Median slowdown compared to stock Luau (lower is better):**
+There are 2 types of file:
+- `LuauVM.luau`: Default version, `~4,800` LOC
+- `BakedVM.luau`: Prebaked version, `~400,000` LOC, fastest but much slower decode time
+
+You can see the simplified performance benchmark here:
 
 | Category | LuauVM | BakedVM | Fiu |
 |---|---:|---:|---:|
@@ -25,4 +24,221 @@ Compared against stock Luau and Fiu across 211 workloads. (Stock Luau is the 1x 
 | Real-world | 10.7x | 7.1x | 47.3x |
 | **Overall median** | **9.7x** | **6.2x** | **41.0x** |
 
-All tests were run without native codegen.
+<details>
+  <summary>Non-simplified version ( if anyone needed )</summary>
+    
+| Workload | LuauVM | BakedVM | Fiu |
+|---|---:|---:|---:|
+| calls/fib | 16.9x | 10.6x | 100.8x |
+| calls/ackermann | 23.6x | 14.2x | 104.4x |
+| calls/tak | 22.7x | 14.6x | 101.8x |
+| calls/tail-position-deep | 26.3x | 16.0x | 124.1x |
+| calls/tail-position-mutual | 22.4x | 14.2x | 90.0x |
+| calls/non-tail-depth | 11.3x | 7.2x | 81.9x |
+| calls/vararg-forward | 24.4x | 15.1x | 78.2x |
+| calls/vararg-select-loop | 16.8x | 10.0x | 58.1x |
+| calls/vararg-pack-unpack | 10.6x | 7.5x | 36.7x |
+| calls/many-args | 25.3x | 13.7x | 81.9x |
+| calls/multiple-returns | 17.1x | 12.6x | 60.6x |
+| calls/pcall-success | 6.6x | 4.7x | 33.3x |
+| calls/pcall-error | 1.6x | 1.2x | 3.0x |
+| calls/pcall-error-number | 1.2x | 1.1x | 3.3x |
+| calls/pcall-nested-xpcall | 1.2x | 1.2x | 3.4x |
+| calls/runtime-error-pcall | 1.1x | 1.1x | 2.6x |
+| calls/method-chain | 10.7x | 6.6x | 50.1x |
+| calls/higher-order | 12.6x | 9.2x | 70.8x |
+| calls/function-table-dispatch | 12.8x | 8.9x | 71.7x |
+| calls/recursive-closure-upvalue | 14.9x | 9.1x | 98.7x |
+| calls/builtin-via-register | 8.0x | 5.4x | 44.5x |
+| calls/string-method-calls | 6.1x | 3.6x | 30.8x |
+| tables/array-grow | 10.2x | 6.9x | 46.9x |
+| tables/array-preallocated | 9.1x | 6.1x | 38.1x |
+| tables/array-append-length | 4.8x | 3.3x | 23.9x |
+| tables/field-access | 15.5x | 9.8x | 48.5x |
+| tables/nested-field-chain | 13.3x | 9.4x | 41.2x |
+| tables/hash-string-keys | 9.5x | 6.2x | 38.2x |
+| tables/hash-integer-sparse | 3.0x | 2.4x | 11.9x |
+| tables/hash-float-bool-keys | 3.6x | 2.5x | 13.6x |
+| tables/object-keys | 7.9x | 5.4x | 32.3x |
+| tables/constructor-array | 8.1x | 5.7x | 31.4x |
+| tables/constructor-record | 11.5x | 7.7x | 39.9x |
+| tables/constructor-constant-template | 11.2x | 5.5x | 36.6x |
+| tables/constructor-nested | 5.8x | 4.4x | 18.2x |
+| tables/setlist-large | 4.4x | 3.4x | 9.8x |
+| tables/setlist-vararg | 13.6x | 9.5x | 44.6x |
+| tables/constant-index | 15.3x | 9.8x | 53.9x |
+| tables/grid-2d | 10.9x | 8.9x | 35.5x |
+| tables/library-insert-remove | 1.1x | 1.1x | 1.5x |
+| tables/library-misc | 4.5x | 2.4x | 8.5x |
+| tables/sort-numbers | 0.8x | 0.7x | 1.2x |
+| tables/sort-comparator | 9.7x | 5.8x | 55.9x |
+| tables/set-membership-delete | 14.1x | 8.5x | 60.3x |
+| tables/raw-operations | 7.1x | 4.0x | 47.9x |
+| tables/length-operator | 11.6x | 7.7x | 49.2x |
+| tables/globals | 12.3x | 8.6x | 41.6x |
+| tables/stack-and-queue | 8.8x | 7.2x | 36.9x |
+| tables/array-of-structs | 13.4x | 8.0x | 35.6x |
+| tables/clone-and-freeze-check | 6.3x | 4.3x | 22.1x |
+| tables/constant-pool-loadkx | 19.3x | 10.1x | 182.7x |
+| loops/numeric-for-sum | 15.7x | 11.1x | 86.4x |
+| loops/numeric-for-nested | 19.2x | 12.8x | 79.6x |
+| loops/numeric-for-step | 16.9x | 11.8x | 96.7x |
+| loops/numeric-for-empty-and-single | 17.5x | 11.6x | 66.4x |
+| loops/while-counter | 13.5x | 8.2x | 63.7x |
+| loops/repeat-until | 13.5x | 7.4x | 63.6x |
+| loops/break-continue | 13.4x | 8.0x | 82.0x |
+| loops/ipairs-array | 6.5x | 3.3x | 27.6x |
+| loops/pairs-array | 7.4x | 4.0x | 29.4x |
+| loops/pairs-hash | 6.5x | 4.2x | 32.9x |
+| loops/pairs-mixed-table | 5.4x | 2.8x | 27.3x |
+| loops/bare-table-iteration | 19.7x | 12.8x | 190.3x |
+| loops/next-explicit | 6.1x | 3.8x | 22.8x |
+| loops/pairs-delete-during | 3.9x | 2.8x | 13.6x |
+| loops/custom-iterator-closure | 14.5x | 8.4x | 59.0x |
+| loops/stateless-iterator | 11.9x | 7.7x | 67.7x |
+| loops/compare-register-forms | 16.3x | 9.6x | 70.3x |
+| loops/compare-as-value | 13.9x | 8.8x | 53.0x |
+| loops/compare-constant-forms | 14.1x | 9.3x | 67.6x |
+| loops/compare-nil-bool-string | 15.9x | 9.4x | 90.2x |
+| loops/compare-strings | 12.7x | 8.1x | 53.9x |
+| loops/logic-and-or-not | 18.1x | 10.9x | 80.0x |
+| loops/logic-register-operands | 16.1x | 10.0x | 76.4x |
+| loops/if-elseif-ladder | 15.0x | 8.5x | 102.2x |
+| loops/prime-sieve-trial | 13.5x | 8.2x | 68.4x |
+| loops/nested-loop-with-labels-exit | 14.9x | 12.0x | 70.3x |
+| loops/long-jump-offsets | 10.7x | 6.2x | 174.2x |
+| strings/concat-operator | 4.0x | 5.2x | 10.9x |
+| strings/concat-accumulate | 0.7x | 0.4x | 1.1x |
+| strings/interpolation | 2.8x | 2.3x | 9.9x |
+| strings/format | 2.1x | 2.0x | 4.6x |
+| strings/byte-scan | 5.6x | 3.2x | 32.5x |
+| strings/sub-scan | 6.2x | 3.8x | 33.0x |
+| strings/char-build | 5.5x | 3.5x | 25.9x |
+| strings/find-plain | 6.0x | 4.2x | 22.1x |
+| strings/find-pattern | 1.4x | 1.2x | 2.6x |
+| strings/match-captures | 2.4x | 1.6x | 6.5x |
+| strings/gmatch-words | 2.3x | 1.8x | 8.2x |
+| strings/gsub | 2.6x | 1.8x | 9.5x |
+| strings/rep-reverse-case | 3.9x | 2.6x | 16.5x |
+| strings/length-and-equality | 14.9x | 10.1x | 68.3x |
+| strings/tostring-tonumber | 3.4x | 2.2x | 18.2x |
+| strings/split-join | 5.1x | 3.3x | 20.9x |
+| strings/method-syntax | 4.8x | 3.1x | 17.2x |
+| strings/buffer-readwrite | 6.6x | 3.8x | 33.0x |
+| strings/buffer-string-conversion | 5.0x | 3.2x | 21.0x |
+| strings/utf8-operations | 6.3x | 3.9x | 22.0x |
+| strings/pack-unpack | 3.4x | 2.5x | 12.2x |
+| strings/caesar-cipher | 6.2x | 3.8x | 27.7x |
+| strings/intern-heavy-keys | 5.3x | 3.4x | 17.9x |
+| arithmetic/add-sub-mul-registers | 10.3x | 5.9x | 43.3x |
+| arithmetic/constant-operand-forms | 19.2x | 10.6x | 80.0x |
+| arithmetic/float-division | 20.6x | 13.3x | 99.5x |
+| arithmetic/modulo | 13.9x | 8.9x | 59.8x |
+| arithmetic/floor-division | 15.0x | 9.8x | 87.7x |
+| arithmetic/division-by-zero-special-values | 7.3x | 4.5x | 34.1x |
+| arithmetic/pow | 8.6x | 6.4x | 34.2x |
+| arithmetic/unary-minus-and-not | 17.6x | 10.1x | 86.3x |
+| arithmetic/compound-assignment | 7.8x | 5.6x | 41.0x |
+| arithmetic/int-float-mixed | 16.8x | 10.1x | 72.0x |
+| arithmetic/bit32-basic | 5.6x | 3.2x | 28.7x |
+| arithmetic/bit32-advanced | 5.5x | 3.1x | 28.7x |
+| arithmetic/bit-hash-mixing | 7.8x | 3.7x | 28.9x |
+| arithmetic/math-fastcalls | 5.7x | 2.8x | 30.2x |
+| arithmetic/math-library-misc | 4.8x | 3.1x | 26.1x |
+| arithmetic/math-aliased-calls | 10.1x | 5.9x | 47.1x |
+| arithmetic/math-random-seeded | 5.0x | 3.3x | 22.6x |
+| arithmetic/gcd-and-digits | 13.1x | 7.9x | 64.2x |
+| arithmetic/vector-operators | 10.0x | 6.4x | 55.2x |
+| arithmetic/vector-library | 6.6x | 4.6x | 29.9x |
+| arithmetic/vector-fields-and-compare | 10.3x | 6.8x | 43.7x |
+| arithmetic/vector-rotation-integration | 7.8x | 4.5x | 37.8x |
+| arithmetic/integer-library | 7.4x | 3.7x | 29.0x |
+| closures/upvalue-read | 12.6x | 7.7x | 77.0x |
+| closures/upvalue-write-counter | 18.4x | 11.2x | 87.0x |
+| closures/shared-upvalues | 15.9x | 10.1x | 91.6x |
+| closures/create-in-loop | 11.0x | 7.0x | 54.8x |
+| closures/create-and-collect | 11.7x | 7.5x | 50.5x |
+| closures/dupclosure-no-captures | 16.1x | 10.7x | 111.2x |
+| closures/currying | 14.3x | 8.6x | 60.1x |
+| closures/compose-pipeline | 15.6x | 10.2x | 88.0x |
+| closures/memoize | 15.1x | 9.7x | 95.8x |
+| closures/memoized-fibonacci | 10.7x | 7.0x | 56.8x |
+| closures/nested-upvalue-chain | 13.1x | 8.3x | 61.1x |
+| closures/counter-factory | 16.2x | 10.6x | 64.0x |
+| closures/iterator-factory | 13.2x | 9.1x | 63.0x |
+| closures/event-callbacks | 15.4x | 9.8x | 91.8x |
+| closures/closure-based-objects | 11.8x | 9.8x | 36.4x |
+| closures/capture-in-while-and-break | 9.6x | 7.3x | 51.0x |
+| closures/vararg-closures | 12.2x | 7.4x | 47.3x |
+| closures/state-machine | 17.0x | 10.7x | 80.2x |
+| metatables/index-table | 12.5x | 6.0x | 36.8x |
+| metatables/index-chain-deep | 4.9x | 3.3x | 16.9x |
+| metatables/index-function | 7.1x | 4.7x | 44.6x |
+| metatables/newindex-function | 7.3x | 5.4x | 31.9x |
+| metatables/newindex-table-redirect | 6.1x | 4.1x | 22.3x |
+| metatables/call-metamethod | 10.5x | 6.9x | 65.4x |
+| metatables/arithmetic-metamethods | 9.7x | 6.0x | 33.7x |
+| metatables/comparison-metamethods | 8.4x | 5.9x | 43.7x |
+| metatables/concat-len-tostring | 5.9x | 3.9x | 54.3x |
+| metatables/oop-class-methods | 11.3x | 7.1x | 66.2x |
+| metatables/oop-inheritance-super | 9.4x | 6.8x | 42.1x |
+| metatables/object-allocation | 9.7x | 7.1x | 45.5x |
+| metatables/proxy-logging | 8.3x | 5.5x | 40.5x |
+| metatables/read-only-proxy-errors | 1.4x | 1.2x | 4.1x |
+| metatables/iter-metamethod | 14.6x | 9.6x | 78.3x |
+| metatables/getmetatable-setmetatable | 1.3x | 1.2x | 2.5x |
+| metatables/default-values-and-inheritance-function | 7.3x | 5.4x | 37.1x |
+| metatables/stack-class | 10.2x | 6.4x | 52.3x |
+| coroutines/generator-wrap | 5.3x | 3.8x | 24.4x |
+| coroutines/resume-yield-values | 4.6x | 3.2x | 22.7x |
+| coroutines/multiple-values-through-yield | 8.4x | 6.6x | 29.4x |
+| coroutines/producer-consumer | 4.0x | 2.6x | 22.6x |
+| coroutines/short-lived-creation | 3.1x | 2.4x | 14.2x |
+| coroutines/wrap-per-iteration | 2.9x | 2.2x | 13.2x |
+| coroutines/for-in-wrap-iterator | 5.3x | 4.0x | 21.5x |
+| coroutines/yield-across-pcall | 2.2x | 1.9x | 8.2x |
+| coroutines/status-queries | 4.3x | 3.1x | 20.1x |
+| coroutines/recursive-tree-generator | 6.9x | 4.6x | 36.5x |
+| coroutines/round-robin-scheduler | 5.1x | 3.8x | 24.2x |
+| coroutines/error-in-coroutine | 1.4x | 1.3x | 3.5x |
+| coroutines/yield-from-deep-calls | 7.2x | 5.6x | 40.5x |
+| coroutines/close-and-wrap-cleanup | 2.3x | 1.8x | 8.4x |
+| coroutines/fibonacci-generator | 6.4x | 4.3x | 27.9x |
+| coroutines/pipeline-stages | 4.9x | 3.0x | 18.7x |
+| coroutines/yield-in-iterator-function | 8.6x | 5.7x | 35.9x |
+| realworld/nbody | 14.1x | 10.6x | 51.3x |
+| realworld/spectral-norm | 12.6x | 8.1x | 74.5x |
+| realworld/fannkuch | 13.3x | 8.7x | 49.3x |
+| realworld/mandelbrot | 17.3x | 12.1x | 64.3x |
+| realworld/sieve | 10.0x | 7.1x | 41.0x |
+| realworld/matrix-multiply | 13.4x | 10.7x | 52.2x |
+| realworld/binary-trees | 11.4x | 7.8x | 63.1x |
+| realworld/heap-sort | 11.9x | 7.1x | 50.7x |
+| realworld/quick-sort | 10.8x | 6.5x | 45.4x |
+| realworld/merge-sort | 12.4x | 7.5x | 51.5x |
+| realworld/insertion-and-shell-sort | 11.4x | 8.0x | 43.9x |
+| realworld/json-roundtrip | 6.2x | 4.2x | 28.6x |
+| realworld/csv-parser | 5.6x | 3.3x | 27.1x |
+| realworld/expression-evaluator | 5.1x | 3.2x | 22.1x |
+| realworld/base64 | 5.5x | 3.7x | 24.3x |
+| realworld/crc32 | 6.5x | 3.7x | 28.5x |
+| realworld/lru-cache | 11.8x | 8.2x | 55.6x |
+| realworld/astar-grid | 10.2x | 7.7x | 39.2x |
+| realworld/game-of-life | 15.4x | 12.6x | 65.5x |
+| realworld/bfs-maze | 7.0x | 5.3x | 26.8x |
+| realworld/lcs-dynamic-programming | 6.9x | 5.2x | 28.6x |
+| realworld/lcs-memoized-recursion | 7.8x | 4.9x | 31.7x |
+| realworld/knapsack | 16.7x | 12.5x | 64.9x |
+| realworld/levenshtein | 9.9x | 4.9x | 33.4x |
+| realworld/word-frequency | 3.3x | 2.3x | 11.6x |
+| realworld/bank-simulation | 2.7x | 2.2x | 10.4x |
+| realworld/n-queens | 13.7x | 9.3x | 53.1x |
+| realworld/n-queens-bitmask | 7.0x | 3.7x | 34.5x |
+| realworld/permutations | 15.8x | 10.8x | 73.0x |
+| realworld/tower-of-hanoi | 10.6x | 7.0x | 59.2x |
+| realworld/brainfuck-interpreter | 14.4x | 7.9x | 73.1x |
+| realworld/stack-vm-interpreter | 15.9x | 9.3x | 77.7x |
+| realworld/hash-table-open-addressing | 7.5x | 4.5x | 30.9x |
+| realworld/raytrace-spheres | 9.5x | 6.2x | 50.4x |
+
+</details>
